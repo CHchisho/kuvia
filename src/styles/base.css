@@ -1,0 +1,80 @@
+@layer base {
+  * {
+    @apply tracking-small;
+  }
+
+  button:not(:disabled) {
+    @apply cursor-pointer;
+  }
+
+  html,
+  body {
+    @apply text-mono-100 max-w-screen;
+  }
+
+  html {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    @apply scroll-pt-[4.875rem] scroll-smooth max-lg:scroll-pt-0;
+  }
+
+  body {
+    @apply bg-[#030303] overflow-x-hidden text-[1rem];
+    margin: 0;
+    transition: all 0.2s;
+    font-feature-settings: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family:
+      ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+      'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin: 0;
+    font-family:
+      ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+      'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family:
+      ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+      'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  /* Prevent iOS Safari zoom on input focus by ensuring >=16px on small screens */
+  input:not([data-amount-input]),
+  select,
+  textarea {
+    @apply max-md:text-[16px]!;
+  }
+
+  /* Minimalistic scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-mono-200;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-mono-300;
+  }
+}

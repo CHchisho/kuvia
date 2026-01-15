@@ -1,0 +1,134 @@
+.gradient-text {
+  background: linear-gradient(90deg, #939293 0%, #fafafa 50%, #939293 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-animate {
+  animation: shimmer 3s linear infinite;
+}
+
+.before-verifying::before {
+  content: 'Verifying the';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mono-400);
+  pointer-events: none;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.break-word {
+  word-break: break-word;
+}
+
+/* Chrome, Safari, and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* IE and Edge */
+.no-scrollbar {
+  -ms-overflow-style: none;
+}
+
+.custom-dashed {
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: transparent;
+}
+
+.custom-dashed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      #e60b40 0,
+      #e60b40 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      #e60b40 0,
+      #e60b40 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      #e60b40 0,
+      #e60b40 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      #e60b40 0,
+      #e60b40 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  background-position:
+    0 0%,
+    0% 0,
+    0 100%,
+    100% 100%;
+  background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+  background-size:
+    100% 2px,
+    2px 100%,
+    100% 2px,
+    2px 100%;
+  z-index: 0;
+}
+
+.custom-dashed .line-top {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    #e60b40 0,
+    #e60b40 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  background-repeat: repeat-x;
+  z-index: 1;
+}
+
+.custom-dashed .line-left {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #e60b40 0,
+    #e60b40 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  background-repeat: repeat-y;
+  z-index: 1;
+}

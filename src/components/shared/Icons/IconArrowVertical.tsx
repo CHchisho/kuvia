@@ -1,0 +1,16 @@
+import type { IconProps } from './types'
+
+export const IconArrowVertical = ({
+  size = 48,
+  color = 'currentColor',
+  className,
+}: IconProps) => {
+  return (
+    <svg width={size} height={size} className={className} viewBox='0 0 20 33' fill='none'>
+      <path
+        d='M15.6464 32.3536C15.8417 32.5488 16.1583 32.5488 16.3536 32.3536L19.5355 29.1716C19.7308 28.9763 19.7308 28.6597 19.5355 28.4645C19.3403 28.2692 19.0237 28.2692 18.8284 28.4645L16 31.2929L13.1716 28.4645C12.9763 28.2692 12.6597 28.2692 12.4645 28.4645C12.2692 28.6597 12.2692 28.9763 12.4645 29.1716L15.6464 32.3536ZM16 0L15.5 0V2H16H16.5V0L16 0ZM16 6H15.5V10H16H16.5V6H16ZM16 14H15.5L15.5 18H16H16.5V14H16ZM16 22H15.5V26H16H16.5V22H16ZM16 30H15.5V32H16H16.5V30H16Z'
+        fill={color}
+      />
+    </svg>
+  )
+}

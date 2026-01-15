@@ -1,0 +1,102 @@
+'use client';
+import {useEffect, useState} from 'react';
+import cs from 'classnames';
+import {useRouter, usePathname} from 'next/navigation';
+import Link from 'next/link';
+import {cn} from '@/utils/cn';
+import {IconHeart} from '../Icons/IconHeart';
+import Image from 'next/image';
+import {Tab} from '@/components/Tab/Tab';
+import Button from '@/components/Button/Button';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {
+  faArrowUp,
+  faCamera,
+  faFileArrowUp,
+} from '@fortawesome/free-solid-svg-icons';
+
+interface NavigationItem {
+  label: string;
+  href: string;
+}
+
+const navigationItems: NavigationItem[] = [
+  {label: 'HOME', href: '/'},
+  {label: 'TOPS', href: '#'},
+];
+
+const Header = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleNavClick = (
+    href: string,
+    event: React.MouseEvent<HTMLAnchorElement>
+  ) => {
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const id = href.slice(1);
+      const targetElement = document.getElementById(id);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth'});
+      }
+      if (pathname !== '/') {
+        router.push('/' + href);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (window.location.hash) {
+      history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search
+      );
+    }
+  }, []);
+
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 h-14 border-b border-mono-400 z-[1000] lg:h-16 bg-mono-500">
+        <div className="flex h-full justify-between items-center max-w-[1600px] mx-auto pl-3">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-mono-100 hover:text-primary-100"
+          >
+            <FontAwesomeIcon icon={faCamera} className="text-[20px]" />
+            <h1 className="text-[24px] font-medium leading-none uppercase">
+              KUVIA
+            </h1>
+          </Link>
+          <nav className="hidden md:flex items-center lg:gap-12 md:gap-10">
+            {navigationItems.map((item) => (
+              <Tab
+                key={item.label}
+                text={item.label}
+                href={item.href}
+                onClick={(e) => handleNavClick(item.href, e)}
+              ></Tab>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <Button variant="primary" href="/upload">
+              UPLOAD IMAGE{' '}
+              <span>
+                <FontAwesomeIcon icon={faFileArrowUp} />
+              </span>
+            </Button>
+            {pathname !== '/login' && (
+              <Button variant="primary" href="/login">
+                LOGIN
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+    </>
+  );
+};
+
+export default Header;

@@ -1,0 +1,100 @@
+@theme inline {
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+@theme {
+  --breakpoint-for-mobile: 520px;
+  --breakpoint-for-mobile-big: 720px;
+  --breakpoint-for-tablet: 1200px;
+  --breakpoint-for-desktop: 1440px;
+  --breakpoint-3xl: 97.5rem;
+
+  --text-sm--line-height: 10px;
+  --text-sm--letter-spacing: -0.0175rem;
+
+  /* --color-mono-50: #121113; */
+  --color-mono-100: #ffffff;
+  /* --color-mono-150: rgba(255, 255, 255, 0.03); */
+  --color-mono-200: #999999;
+  --color-mono-300: #545454;
+  --color-mono-400: #1c1c1c;
+  --color-mono-500: #030303;
+  /* --color-mono-700: #c6c6c7; */
+  /* --color-mono-800: #ffffff; */
+  /* --color-mono-900: #fafafa; */
+
+  --color-primary-100: #dfdf1e;
+
+  --color-red-100: #da3738;
+
+  --color-danger-100: #610726;
+  --color-danger-200: #920b3a;
+  --color-danger-400: #f31260;
+  --color-danger-700: #faa0bf;
+  --color-danger-900: #fee7ef;
+
+  --color-success-50: #21281a;
+  --color-success-100: #425c2b;
+  --color-success-200: #628f3c;
+  --color-success-300: #82c24c;
+  --color-success-400: #a3f65d;
+  --color-success-500: #bdf78c;
+
+  --color-danger-100: #610726;
+  --color-danger-300: #c20e4d;
+  --color-danger-600: #f871a0;
+
+  --color-warning-100: #62420e;
+  --color-warning-200: #936316;
+  --color-warning-400: #f5a524;
+
+  --color-light-100: #eeffe8;
+
+  --tracking-small: -0.28px;
+  --tracking-base: -0.32px;
+  --tracking-large: -0.48px;
+
+  --animate-slower-spin: spin 2s infinite linear;
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-scroll-x: scroll-x 0.3s linear infinite;
+
+  --header-height: 68px;
+  --footer-height: 37px;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes scroll-x {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-40px);
+    }
+  }
+}
