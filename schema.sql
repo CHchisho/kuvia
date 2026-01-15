@@ -22,12 +22,12 @@ CREATE TABLE media (
     image VARCHAR(500) NOT NULL,
     code VARCHAR(20) NOT NULL UNIQUE,
     description TEXT,
+    isPrivate BOOLEAN DEFAULT FALSE,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     userId INTEGER,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_code (code),
-    INDEX idx_userId (userId),
-    INDEX idx_createdAt (createdAt)
+    INDEX idx_userId (userId)
 );
 
 -- Likes table
