@@ -1,19 +1,13 @@
 'use client';
-import {useEffect, useState} from 'react';
-import cs from 'classnames';
+
+import {useEffect} from 'react';
 import {useRouter, usePathname} from 'next/navigation';
 import Link from 'next/link';
-import {cn} from '@/utils/cn';
-import {IconHeart} from '../Icons/IconHeart';
-import Image from 'next/image';
 import {Tab} from '@/components/Tab/Tab';
 import Button from '@/components/Button/Button';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {
-  faArrowUp,
-  faCamera,
-  faFileArrowUp,
-} from '@fortawesome/free-solid-svg-icons';
+import {faCamera, faFileArrowUp} from '@fortawesome/free-solid-svg-icons';
+import {useIsAllowed} from '@/store/useIsAllowed';
 
 interface NavigationItem {
   label: string;
@@ -28,6 +22,27 @@ const navigationItems: NavigationItem[] = [
 const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const {isAllowed, username, setIsAllowed} = useIsAllowed();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/me', {credentials: 'include'})
+      .then((res) => res.json())
+      .then((data: {success: boolean; user?: {username: string}}) => {
+        if (cancelled) return;
+        if (data.success && data.user) {
+          setIsAllowed(data.user.username);
+        } else {
+          setIsAllowed(undefined);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsAllowed(undefined);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [setIsAllowed]);
 
   const handleNavClick = (
     href: string,
@@ -76,18 +91,26 @@ const Header = () => {
                 text={item.label}
                 href={item.href}
                 onClick={(e) => handleNavClick(item.href, e)}
-              ></Tab>
+              />
             ))}
           </nav>
 
           <div className="flex items-center gap-4">
+            {isAllowed && username && (
+              <Link
+                href="/me"
+                className="text-mono-200 hover:text-primary-100 text-sm hidden sm:inline transition-colors"
+              >
+                {username}
+              </Link>
+            )}
             <Button variant="primary" href="/upload">
               UPLOAD IMAGE{' '}
               <span>
                 <FontAwesomeIcon icon={faFileArrowUp} />
               </span>
             </Button>
-            {pathname !== '/login' && (
+            {!(isAllowed && username) && pathname !== '/login' && (
               <Button variant="primary" href="/login">
                 LOGIN
               </Button>

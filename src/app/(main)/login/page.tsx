@@ -1,19 +1,86 @@
 'use client';
 
 import React, {useState} from 'react';
+import {useRouter} from 'next/navigation';
 import {cn} from '@/utils/cn';
 import Button from '@/components/Button/Button';
 import Link from 'next/link';
+import {useIsAllowed, type IsAllowed} from '@/store/useIsAllowed';
+
+type AuthResponse = {
+  success: boolean;
+  error?: string;
+  user?: {id: number; username: string; email: string};
+};
 
 export default function LoginPage() {
+  const router = useRouter();
+  const setIsAllowed = useIsAllowed((s: IsAllowed) => s.setIsAllowed);
+
   const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? 'Login' : 'Register', {email, password});
+    setError('');
+
+    if (!isLogin) {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
+    }
+
+    setLoading(true);
+    try {
+      const url = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const body = isLogin
+        ? {email: email.trim(), password}
+        : {
+            username: username.trim(),
+            email: email.trim().toLowerCase(),
+            password,
+          };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      const data: AuthResponse = await res.json();
+
+      if (!data.success) {
+        setError(data.error ?? 'Something went wrong');
+        return;
+      }
+
+      if (data.user) {
+        setIsAllowed(data.user.username);
+        router.push('/');
+        router.refresh();
+      }
+    } catch {
+      setError('Network error. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = () => {
+    setIsLogin(!isLogin);
+    setConfirmPassword('');
+    setError('');
   };
 
   return (
@@ -27,7 +94,43 @@ export default function LoginPage() {
             {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </p>
 
+          {error && (
+            <div
+              className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-mono-100 text-sm"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Username (only for registration) */}
+            {!isLogin && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="username"
+                  className="block text-mono-100 font-medium"
+                >
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  placeholder="johndoe"
+                  autoComplete="username"
+                  className={cn(
+                    'w-full px-4 py-3 rounded-lg',
+                    'bg-mono-500 border border-mono-300',
+                    'text-mono-100 placeholder-mono-300',
+                    'focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent'
+                  )}
+                />
+              </div>
+            )}
+
             {/* Email */}
             <div className="space-y-2">
               <label
@@ -43,6 +146,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="your@email.com"
+                autoComplete="email"
                 className={cn(
                   'w-full px-4 py-3 rounded-lg',
                   'bg-mono-500 border border-mono-300',
@@ -67,6 +171,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 className={cn(
                   'w-full px-4 py-3 rounded-lg',
                   'bg-mono-500 border border-mono-300',
@@ -92,6 +197,7 @@ export default function LoginPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className={cn(
                     'w-full px-4 py-3 rounded-lg',
                     'bg-mono-500 border border-mono-300',
@@ -103,21 +209,20 @@ export default function LoginPage() {
             )}
 
             {/* Submit Button */}
-            <Button type="submit" variant="primary" className="w-full">
-              {isLogin ? 'Sign In' : 'Sign Up'}
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
           </form>
 
-          {/* Toggle between login and registration */}
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setEmail('');
-                setPassword('');
-                setConfirmPassword('');
-              }}
+              onClick={switchMode}
               className="text-mono-200 hover:text-primary-100 transition-colors"
             >
               {isLogin
@@ -126,7 +231,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Link to home */}
           <div className="mt-4 text-center">
             <Link
               href="/"

@@ -2,7 +2,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type IsAllowed = {
+export type IsAllowed = {
   isAllowed: boolean
   username: string | undefined
   isHydrated: boolean

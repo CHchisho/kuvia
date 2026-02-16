@@ -28,3 +28,10 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Uploaded files
+uploads/
+
+raportti/
+
+PROJECT_REPORT.md

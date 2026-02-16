@@ -19,15 +19,20 @@ CREATE TABLE users (
 -- Media table (images)
 CREATE TABLE media (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
-    image VARCHAR(500) NOT NULL,
+    userId INTEGER NOT NULL,
     code VARCHAR(20) NOT NULL UNIQUE,
+    image VARCHAR(512) NOT NULL,
+    fileHash VARCHAR(64) NOT NULL,
+    mimeType VARCHAR(32) NOT NULL,
     description TEXT,
     isPrivate BOOLEAN DEFAULT FALSE,
+    expiresAt DATETIME NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    userId INTEGER,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_code (code),
-    INDEX idx_userId (userId)
+    INDEX idx_userId (userId),
+    INDEX idx_user_hash (userId, fileHash),
+    INDEX idx_expiresAt (expiresAt)
 );
 
 -- Likes table

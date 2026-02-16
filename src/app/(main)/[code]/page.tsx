@@ -1,31 +1,29 @@
-import React from 'react';
-import Image from 'next/image';
-import {notFound} from 'next/navigation';
-import {mockImages} from '@/data/mockPhotos';
+'use client';
+
+import React, {useState} from 'react';
 import Link from 'next/link';
 
 interface PhotoPageProps {
-  params: Promise<{
-    code: string;
-  }>;
+  params: Promise<{code: string}>;
 }
 
-export default async function PhotoPage({params}: PhotoPageProps) {
-  const {code} = await params;
-  const photo = mockImages.find((img) => img.code === code);
+export default function PhotoPage({params}: PhotoPageProps) {
+  const [code, setCode] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
-  if (!photo) {
-    notFound();
+  React.useEffect(() => {
+    params.then((p) => setCode(p.code));
+  }, [params]);
+
+  if (code === null) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center px-4">
+        <p className="text-mono-200">Loading…</p>
+      </div>
+    );
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const imageUrl = `/api/images/${code}`;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
@@ -36,46 +34,28 @@ export default async function PhotoPage({params}: PhotoPageProps) {
         ← Back to Gallery
       </Link>
 
-      <div className="overflow-hidden flex flex-col lg:flex-row justify-between gap-4 h-[70vh]">
-        {/* Photo */}
-        <div className="relative inline-block border border-mono-300 rounded-lg overflow-hidden h-full">
-          <Image
-            src={photo.url}
-            alt={photo.description}
-            width={photo.width}
-            height={photo.height}
-            className="object-contain max-h-[70vh] w-auto h-full"
-            priority
+      {error ? (
+        <div className="rounded-lg border border-mono-300 bg-mono-400 p-8 text-center">
+          <p className="text-mono-100 font-medium mb-2">
+            Link is invalid or expired
+          </p>
+          <p className="text-mono-300 text-sm mb-4">
+            Photo is deleted or storage time has expired.
+          </p>
+          <Link href="/" className="text-primary-100 hover:underline">
+            Back to Home
+          </Link>
+        </div>
+      ) : (
+        <div className="relative border border-mono-300 rounded-lg overflow-hidden bg-mono-500 flex items-center justify-center min-h-[60vh]">
+          <img
+            src={imageUrl}
+            alt="Фото"
+            className="max-w-full max-h-[70vh] w-auto h-auto object-contain"
+            onError={() => setError(true)}
           />
         </div>
-
-        {/* Info */}
-        <div className="p-6 space-y-4 flex-1 lg:min-w-[300px] lg:max-w-md border border-mono-300 rounded-lg bg-mono-400 h-fit">
-          {/* Description */}
-          {photo.description && (
-            <div>
-              <h2 className="text-lg font-semibold text-mono-100 mb-2">
-                Description
-              </h2>
-              <p className="text-mono-200">{photo.description}</p>
-            </div>
-          )}
-
-          {/* Metadata */}
-          <div className="flex flex-wrap gap-6 pt-4 border-t border-mono-300">
-            <div>
-              <span className="text-sm text-mono-300">Author</span>
-              <p className="text-mono-100 font-medium">{photo.author}</p>
-            </div>
-            <div>
-              <span className="text-sm text-mono-300">Upload Date</span>
-              <p className="text-mono-100 font-medium">
-                {formatDate(photo.uploadDate)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
