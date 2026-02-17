@@ -35,17 +35,19 @@ CREATE TABLE media (
     INDEX idx_expiresAt (expiresAt)
 );
 
--- Likes table
-CREATE TABLE likes (
+-- Votes table (upvotes/downvotes)
+CREATE TABLE votes (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     userId INTEGER NOT NULL,
     mediaId INTEGER NOT NULL,
+    type ENUM('upvote', 'downvote') NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (mediaId) REFERENCES media(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_like (userId, mediaId),
+    UNIQUE KEY unique_vote (userId, mediaId),
     INDEX idx_userId (userId),
-    INDEX idx_mediaId (mediaId)
+    INDEX idx_mediaId (mediaId),
+    INDEX idx_type (type)
 );
 
 -- Comments table

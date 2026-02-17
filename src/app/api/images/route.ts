@@ -5,15 +5,34 @@ type MediaRow = {
   id: number
   code: string
   description: string | null
+  upvotes: number
+  downvotes: number
+  rating: number
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const sortBy = searchParams.get('sort') || 'date'
+
+    const orderByClause =
+      sortBy === 'rating'
+        ? 'rating DESC, m.createdAt DESC'
+        : 'm.createdAt DESC'
+
     const rows = await query<MediaRow[]>(
-      `SELECT id, code, description 
-       FROM media 
-       WHERE isPrivate = 0 AND expiresAt > NOW() 
-       ORDER BY createdAt DESC`
+      `SELECT 
+        m.id, 
+        m.code, 
+        m.description,
+        COALESCE(SUM(CASE WHEN v.type = 'upvote' THEN 1 ELSE 0 END), 0) as upvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'downvote' THEN 1 ELSE 0 END), 0) as downvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'upvote' THEN 1 WHEN v.type = 'downvote' THEN -1 ELSE 0 END), 0) as rating
+       FROM media m
+       LEFT JOIN votes v ON m.id = v.mediaId
+       WHERE m.isPrivate = 0 AND m.expiresAt > NOW()
+       GROUP BY m.id, m.code, m.description, m.createdAt
+       ORDER BY ${orderByClause}`
     )
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
@@ -21,6 +40,9 @@ export async function GET() {
       id: row.id,
       code: row.code,
       description: row.description ?? '',
+      upvotes: Number(row.upvotes),
+      downvotes: Number(row.downvotes),
+      rating: Number(row.rating),
       imageUrl:
         baseUrl !== ''
           ? `${baseUrl}/api/images/${row.code}`
