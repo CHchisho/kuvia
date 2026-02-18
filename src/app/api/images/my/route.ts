@@ -8,6 +8,9 @@ type MediaRow = {
   isPrivate: number
   expiresAt: Date
   createdAt: Date
+  upvotes: number
+  downvotes: number
+  rating: number
 }
 
 export async function GET() {
@@ -21,10 +24,15 @@ export async function GET() {
     }
 
     const rows = await query<MediaRow[]>(
-      `SELECT id, code, isPrivate, expiresAt, createdAt 
-       FROM media 
-       WHERE userId = ? AND expiresAt > NOW() 
-       ORDER BY createdAt DESC`,
+      `SELECT m.id, m.code, m.isPrivate, m.expiresAt, m.createdAt,
+        COALESCE(SUM(CASE WHEN v.type = 'upvote' THEN 1 ELSE 0 END), 0) AS upvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'downvote' THEN 1 ELSE 0 END), 0) AS downvotes,
+        COALESCE(SUM(CASE WHEN v.type = 'upvote' THEN 1 WHEN v.type = 'downvote' THEN -1 ELSE 0 END), 0) AS rating
+       FROM media m
+       LEFT JOIN votes v ON m.id = v.mediaId
+       WHERE m.userId = ? AND m.expiresAt > NOW()
+       GROUP BY m.id, m.code, m.isPrivate, m.expiresAt, m.createdAt
+       ORDER BY m.createdAt DESC`,
       [user.id]
     )
 
@@ -37,6 +45,9 @@ export async function GET() {
       isPublic: row.isPrivate === 0,
       expiresAt: row.expiresAt,
       createdAt: row.createdAt,
+      upvotes: Number(row.upvotes),
+      downvotes: Number(row.downvotes),
+      rating: Number(row.rating),
     }))
 
     return NextResponse.json({ success: true, items })

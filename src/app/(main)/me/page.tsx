@@ -24,6 +24,17 @@ type UploadItem = {
   isPublic: boolean;
   expiresAt: string;
   createdAt: string;
+  upvotes: number;
+  downvotes: number;
+  rating: number;
+};
+
+type UserStats = {
+  totalUpvotes: number;
+  totalDownvotes: number;
+  totalRating: number;
+  imageCount: number;
+  topCount: number;
 };
 
 export default function MePage() {
@@ -32,6 +43,7 @@ export default function MePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
+  const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,19 +53,28 @@ export default function MePage() {
         if (cancelled) return;
         if (data.success && data.user) {
           setUser(data.user);
-          return fetch('/api/images/my', {credentials: 'include'});
+          return Promise.all([
+            fetch('/api/images/my', {credentials: 'include'}).then((r) => r.json()),
+            fetch('/api/users/me/stats', {credentials: 'include'}).then((r) => r.json()),
+          ]);
         }
         router.replace('/login');
         return null;
       })
-      .then((res) => {
-        if (cancelled || res == null) return res;
-        return res.json();
-      })
-      .then((data: {success?: boolean; items?: UploadItem[]} | null) => {
-        if (cancelled) return;
-        if (data?.success && Array.isArray(data.items)) {
-          setUploads(data.items);
+      .then((data: [ { success?: boolean; items?: UploadItem[] }, { success?: boolean } & UserStats ] | null | undefined) => {
+        if (cancelled || data == null || data === undefined) return;
+        const [imagesRes, statsRes] = data;
+        if (imagesRes?.success && Array.isArray(imagesRes.items)) {
+          setUploads(imagesRes.items);
+        }
+        if (statsRes?.success && 'totalUpvotes' in statsRes) {
+          setStats({
+            totalUpvotes: statsRes.totalUpvotes,
+            totalDownvotes: statsRes.totalDownvotes,
+            totalRating: statsRes.totalRating,
+            imageCount: statsRes.imageCount,
+            topCount: statsRes.topCount,
+          });
         }
       })
       .catch(() => {
@@ -122,19 +143,30 @@ export default function MePage() {
               </Button>
             </div>
           </div>
-          <div className="mt-6 pt-6 border-t border-mono-300 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="mt-6 pt-6 border-t border-mono-300 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex items-center gap-2 text-mono-200">
               <FontAwesomeIcon icon={faHeart} className="text-primary-100" />
-              <span>Likes</span>
-              <span className="text-mono-100 font-medium">—</span>
+              <span>Total upvotes</span>
+              <span className="text-mono-100 font-medium">
+                {stats?.totalUpvotes ?? '—'}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-mono-200">
               <FontAwesomeIcon
                 icon={faChartLine}
                 className="text-primary-100"
               />
-              <span>Tops</span>
-              <span className="text-mono-100 font-medium">—</span>
+              <span>Top upvotes</span>
+              <span className="text-mono-100 font-medium">
+                {stats?.topCount ?? '—'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-mono-200">
+              <FontAwesomeIcon icon={faImage} className="text-primary-100" />
+              <span>Images</span>
+              <span className="text-mono-100 font-medium">
+                {stats?.imageCount ?? '—'}
+              </span>
             </div>
           </div>
         </section>
@@ -165,6 +197,9 @@ export default function MePage() {
                   </Link>
                   <p className="text-xs text-mono-300 mt-1 truncate">
                     /{item.shortCode} · {item.isPublic ? 'public' : 'private'}
+                  </p>
+                  <p className="text-xs text-mono-200 mt-0.5">
+                    ▲ {item.upvotes} · {item.rating} · ▼ {item.downvotes}
                   </p>
                 </li>
               ))}
