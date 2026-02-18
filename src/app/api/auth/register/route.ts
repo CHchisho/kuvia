@@ -38,8 +38,8 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
     const insertResult = await query(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-      [trimmedUsername, trimmedEmail, hashedPassword]
+      'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+      [trimmedUsername, trimmedEmail, hashedPassword, 'user']
     )
     const userId = (insertResult as unknown as { insertId: number }).insertId
 
@@ -47,12 +47,13 @@ export async function POST(request: Request) {
       sub: String(userId),
       username: trimmedUsername,
       email: trimmedEmail,
+      role: 'user',
     })
 
     const { name, options } = getCookieOptions()
     const response = NextResponse.json({
       success: true,
-      user: { id: userId, username: trimmedUsername, email: trimmedEmail },
+      user: { id: userId, username: trimmedUsername, email: trimmedEmail, role: 'user' },
     })
     response.cookies.set(name, token, options as Record<string, string | number | boolean>)
 

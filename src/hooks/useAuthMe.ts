@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react'
 
+export type UserRole = 'user' | 'moderator' | 'admin'
+
 export type AuthMeUser = {
   id: number
   username: string
   email: string
+  role: UserRole
 }
 
 type AuthMeResponse =

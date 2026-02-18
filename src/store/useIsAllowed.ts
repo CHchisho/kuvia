@@ -20,7 +20,7 @@ export const useIsAllowed = create<IsAllowed>()(
       setHydrated: () => set(() => ({ isHydrated: true })),
     }),
     {
-      name: 'isAllowed-storage', // уникальное имя для хранения в localStorage)
+      name: 'isAllowed-storage', // unique name for localStorage
       onRehydrateStorage: () => (state) => {
         state?.setHydrated()
       },

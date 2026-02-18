@@ -21,6 +21,8 @@ export type ImageUploadProps = {
   onError?: (message: string) => void;
 };
 
+const DESCRIPTION_MAX_LENGTH = 200;
+
 export const ImageUpload = ({
   isPublic = true,
   expiresInDays = 1,
@@ -29,6 +31,7 @@ export const ImageUpload = ({
 }: ImageUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +40,7 @@ export const ImageUpload = ({
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     setSelectedFile(null);
+    setDescription('');
     setError(null);
   }, [preview]);
 
@@ -95,6 +99,7 @@ export const ImageUpload = ({
       formData.set('file', selectedFile);
       formData.set('isPublic', isPublic ? 'true' : 'false');
       formData.set('expiresInDays', String(expiresInDays));
+      if (description.trim()) formData.set('description', description.trim());
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -151,6 +156,32 @@ export const ImageUpload = ({
                 className="max-w-full max-h-full object-contain"
               />
             </div>
+            <div className="text-left">
+              <label
+                htmlFor="upload-description"
+                className="block text-sm text-mono-200 mb-1"
+              >
+                Photo description (optional, up to {DESCRIPTION_MAX_LENGTH}{' '}
+                characters)
+              </label>
+              <textarea
+                id="upload-description"
+                value={description}
+                onChange={(e) =>
+                  setDescription(
+                    e.target.value.slice(0, DESCRIPTION_MAX_LENGTH)
+                  )
+                }
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                placeholder="Describe the photo..."
+                className="w-full px-3 py-2 rounded-lg bg-mono-500 text-mono-100 border border-mono-300 focus:outline-none focus:border-primary-100 resize-none"
+                rows={2}
+                disabled={uploading}
+              />
+              <p className="text-xs text-mono-300 mt-1">
+                {description.length}/{DESCRIPTION_MAX_LENGTH}
+              </p>
+            </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button
                 type="button"
@@ -159,7 +190,7 @@ export const ImageUpload = ({
                 onClick={handleUpload}
               >
                 <FontAwesomeIcon icon={faUpload} />
-                {uploading ? ' Загрузка…' : ' Загрузить'}
+                {uploading ? ' Uploading…' : ' Upload'}
               </Button>
               <button
                 type="button"
@@ -168,20 +199,20 @@ export const ImageUpload = ({
                 }}
                 className="text-mono-200 hover:text-primary-100 text-sm"
               >
-                Выбрать другой файл
+                Choose another file
               </button>
               <button
                 type="button"
                 onClick={clearPreview}
                 className="text-mono-300 hover:text-mono-100 p-1"
-                aria-label="Убрать"
+                aria-label="Remove"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             </div>
             {selectedFile && (
               <p className="text-sm text-mono-300">
-                {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} КБ)
+                {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
               </p>
             )}
           </div>
@@ -196,11 +227,11 @@ export const ImageUpload = ({
               className="text-5xl text-mono-300 mb-4"
             />
             <p className="text-mono-200 mb-2">
-              Нажмите для выбора файла или вставьте изображение из буфера
+              Click to select a file or paste an image from clipboard
               (Ctrl+V)
             </p>
             <p className="text-sm text-mono-300">
-              JPG, PNG, GIF, WebP, до {MAX_SIZE_MB} МБ
+              JPG, PNG, GIF, WebP, up to {MAX_SIZE_MB} MB
             </p>
           </button>
         )}

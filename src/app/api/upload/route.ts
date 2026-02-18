@@ -31,6 +31,9 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File | null
     const isPublicRaw = formData.get('isPublic')
     const expiresInDaysRaw = formData.get('expiresInDays')
+    const descriptionRaw = formData.get('description')
+    const description =
+      typeof descriptionRaw === 'string' ? descriptionRaw.trim().slice(0, 200) : ''
 
     if (!file || typeof file === 'string') {
       return NextResponse.json(
@@ -94,14 +97,15 @@ export async function POST(request: Request) {
     const expiresAt = getExpiresAt(expiresInDays)
 
     await query(
-      `INSERT INTO media (userId, code, image, fileHash, mimeType, isPrivate, expiresAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO media (userId, code, image, fileHash, mimeType, description, isPrivate, expiresAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         user.id,
         shortCode,
         storagePath,
         fileHash,
         mimeType,
+        description || null,
         isPublic ? 0 : 1,
         expiresAt,
       ]

@@ -41,10 +41,13 @@ export async function checkConnection(): Promise<boolean> {
   }
 }
 
+export type UserRole = 'user' | 'moderator' | 'admin'
+
 export type UserRow = {
   id: number
   createdAt: Date
   username: string
   email: string
   password: string
+  role: UserRole
 }

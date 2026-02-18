@@ -12,8 +12,10 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    role ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user',
     INDEX idx_username (username),
-    INDEX idx_email (email)
+    INDEX idx_email (email),
+    INDEX idx_role (role)
 );
 
 -- Media table (images)
@@ -94,6 +96,22 @@ CREATE TABLE views (
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (mediaId) REFERENCES media(id) ON DELETE CASCADE,
     INDEX idx_userId (userId),
+    INDEX idx_mediaId (mediaId),
+    INDEX idx_createdAt (createdAt)
+);
+
+-- Moderation log (admin/moderator actions)
+CREATE TABLE moderation_log (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    userId INTEGER NOT NULL,
+    action VARCHAR(64) NOT NULL,
+    mediaId INTEGER,
+    mediaCode VARCHAR(20),
+    details TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_userId (userId),
+    INDEX idx_action (action),
     INDEX idx_mediaId (mediaId),
     INDEX idx_createdAt (createdAt)
 );

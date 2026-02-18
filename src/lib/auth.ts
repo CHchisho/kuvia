@@ -4,10 +4,13 @@ const JWT_SECRET = process.env.JWT_SECRET ?? 'kuvia-dev-secret-change-in-product
 const COOKIE_NAME = 'kuvia_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
+export type UserRole = 'user' | 'moderator' | 'admin'
+
 export type JWTPayload = {
   sub: string // userId
   username: string
   email: string
+  role: UserRole
   iat?: number
   exp?: number
 }
@@ -21,6 +24,7 @@ export async function createToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): Pro
   return new jose.SignJWT({
     username: payload.username,
     email: payload.email,
+    role: payload.role ?? 'user',
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(String(payload.sub))
@@ -37,6 +41,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       sub: payload.sub as string,
       username: payload.username as string,
       email: payload.email as string,
+      role: (payload.role as UserRole) ?? 'user',
       iat: payload.iat,
       exp: payload.exp,
     }

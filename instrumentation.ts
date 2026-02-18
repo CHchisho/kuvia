@@ -1,16 +1,26 @@
 /**
  * Executed when the Next.js server starts.
- * Checks the connection to the database and sets up cleanup job.
+ * Checks the connection to the database, ensures seed users exist, and sets up cleanup job.
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
+  const isNodeServer =
+    process.env.NEXT_RUNTIME === 'nodejs' || process.env.NEXT_RUNTIME === undefined
+  if (isNodeServer) {
     const { checkConnection } = await import('./src/lib/db')
     const { cleanupExpiredMedia } = await import('./src/lib/cleanup')
+    const { ensureSeedUsers } = await import('./src/lib/seedUsers')
 
     // Check database connection
     const ok = await checkConnection()
     if (ok) {
       console.log('[kuvia] Database connection OK')
+
+      // Ensure base accounts (admin, moderator) exist
+      try {
+        await ensureSeedUsers()
+      } catch (e) {
+        console.error('[kuvia] Seed users check failed:', e)
+      }
 
       // Run cleanup on startup
       try {

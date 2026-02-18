@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
-import { getAuthUser } from '@/lib/authRequest'
+import { getAuthUser, canViewMedia } from '@/lib/authRequest'
 
 type MediaRow = {
   id: number
+  userId: number
+  isPrivate: number
 }
 
 type CommentRow = {
@@ -28,9 +30,8 @@ export async function GET(
       )
     }
 
-    // Get mediaId by code
     const mediaRows = await query<MediaRow[]>(
-      'SELECT id FROM media WHERE code = ? LIMIT 1',
+      'SELECT id, userId, isPrivate FROM media WHERE code = ? AND expiresAt > NOW() LIMIT 1',
       [code.trim()]
     )
 
@@ -41,7 +42,16 @@ export async function GET(
       )
     }
 
-    const mediaId = mediaRows[0]!.id
+    const media = mediaRows[0]!
+    const user = await getAuthUser()
+    if (!canViewMedia(user, media.userId, media.isPrivate === 1)) {
+      return NextResponse.json(
+        { success: false, error: 'Media not found' },
+        { status: 404 }
+      )
+    }
+
+    const mediaId = media.id
 
     // Get comments with author usernames
     const comments = await query<CommentRow[]>(
@@ -103,9 +113,8 @@ export async function POST(
       )
     }
 
-    // Get mediaId by code
     const mediaRows = await query<MediaRow[]>(
-      'SELECT id FROM media WHERE code = ? LIMIT 1',
+      'SELECT id, userId, isPrivate FROM media WHERE code = ? AND expiresAt > NOW() LIMIT 1',
       [code.trim()]
     )
 
@@ -116,7 +125,15 @@ export async function POST(
       )
     }
 
-    const mediaId = mediaRows[0]!.id
+    const media = mediaRows[0]!
+    if (!canViewMedia(user, media.userId, media.isPrivate === 1)) {
+      return NextResponse.json(
+        { success: false, error: 'Media not found' },
+        { status: 404 }
+      )
+    }
+
+    const mediaId = media.id
 
     // Create comment
     const insertResult = await query(

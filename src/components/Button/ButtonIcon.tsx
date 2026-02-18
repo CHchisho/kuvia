@@ -48,7 +48,7 @@ const ButtonIcon = React.forwardRef<HTMLButtonElement, ButtonIconProps>(
       className
     );
 
-    // Извлекаем только совместимые с anchor свойства
+    // Extract only anchor-compatible props
     const {
       form,
       formAction,
@@ -66,7 +66,7 @@ const ButtonIcon = React.forwardRef<HTMLButtonElement, ButtonIconProps>(
         e.stopPropagation();
         return;
       }
-      // Вызываем onClick из props, если он есть
+      // Call onClick from props if provided
       if (onClick) {
         onClick(e as any);
       }

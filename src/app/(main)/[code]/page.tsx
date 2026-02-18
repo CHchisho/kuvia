@@ -2,20 +2,35 @@
 
 import React, {useState} from 'react';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {useAuthMe} from '@/hooks/useAuthMe';
 import {useMediaComments} from '@/hooks/useMediaComments';
 import {useMediaVotes, type VoteType} from '@/hooks/useMediaVotes';
+import {useMediaMetadata} from '@/hooks/useMediaMetadata';
 
 interface PhotoPageProps {
   params: Promise<{code: string}>;
 }
 
+function canDelete(
+  userId: number | undefined,
+  role: string | undefined,
+  authorId: number
+): boolean {
+  if (!userId) return false;
+  if (userId === authorId) return true;
+  return role === 'admin' || role === 'moderator';
+}
+
 export default function PhotoPage({params}: PhotoPageProps) {
+  const router = useRouter();
   const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const {user} = useAuthMe();
+  const {metadata, loading: loadingMeta, error: metaError} = useMediaMetadata(code);
   const {
     votes,
     loading: loadingVotes,
@@ -45,6 +60,34 @@ export default function PhotoPage({params}: PhotoPageProps) {
     if (result.success) setCommentText('');
   };
 
+  const showDelete =
+    user &&
+    metadata &&
+    canDelete(user.id, user.role, metadata.authorId);
+
+  const handleDelete = async () => {
+    if (!code || !showDelete || deleting) return;
+    if (!confirm('Delete this photo? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/images/${code}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push('/');
+        router.refresh();
+      } else {
+        alert(data.error || 'Failed to delete');
+      }
+    } catch {
+      alert('Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (code === null) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center px-4">
@@ -53,16 +96,47 @@ export default function PhotoPage({params}: PhotoPageProps) {
     );
   }
 
+  if (metaError && !error) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8">
+        <Link
+          href="/"
+          className="inline-block mb-6 text-mono-200 hover:text-primary-100 transition-colors"
+        >
+          ← Back to Gallery
+        </Link>
+        <div className="rounded-lg border border-mono-300 bg-mono-400 p-8 text-center">
+          <p className="text-mono-100 font-medium mb-2">Photo not found or expired</p>
+          <Link href="/" className="text-primary-100 hover:underline">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const imageUrl = `/api/images/${code}`;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
-      <Link
-        href="/"
-        className="inline-block mb-6 text-mono-200 hover:text-primary-100 transition-colors"
-      >
-        ← Back to Gallery
-      </Link>
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          href="/"
+          className="text-mono-200 hover:text-primary-100 transition-colors"
+        >
+          ← Back to Gallery
+        </Link>
+        {showDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="px-4 py-2 rounded border border-red-500 text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+          >
+            {deleting ? 'Deleting…' : 'Delete photo'}
+          </button>
+        )}
+      </div>
 
       {error ? (
         <div className="rounded-lg border border-mono-300 bg-mono-400 p-8 text-center">
@@ -86,6 +160,41 @@ export default function PhotoPage({params}: PhotoPageProps) {
               onError={() => setError(true)}
             />
           </div>
+
+          {/* Metadata */}
+          {loadingMeta ? (
+            <p className="text-mono-300 text-sm mb-4">Loading info…</p>
+          ) : metadata && (
+            <div className="mb-6 p-4 border border-mono-300 rounded-lg bg-mono-400 text-sm text-mono-200">
+              <div className="grid gap-2">
+                <p>
+                  <span className="text-mono-300">Author:</span>{' '}
+                  <span className="text-mono-100">{metadata.authorUsername}</span>
+                </p>
+                <p>
+                  <span className="text-mono-300">Visibility:</span>{' '}
+                  {metadata.isPrivate ? 'Private' : 'Public'}
+                </p>
+                <p>
+                  <span className="text-mono-300">Uploaded:</span>{' '}
+                  {new Date(metadata.createdAt).toLocaleString()}
+                </p>
+                <p>
+                  <span className="text-mono-300">Expires:</span>{' '}
+                  {new Date(metadata.expiresAt).toLocaleString()}
+                </p>
+                {metadata.description && (
+                  <p>
+                    <span className="text-mono-300">Description:</span>{' '}
+                    <span className="text-mono-100">{metadata.description}</span>
+                  </p>
+                )}
+                <p>
+                  <span className="text-mono-300">Type:</span> {metadata.mimeType}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Rating section */}
           <div className="mb-6 p-4 border border-mono-300 rounded-lg bg-mono-400">

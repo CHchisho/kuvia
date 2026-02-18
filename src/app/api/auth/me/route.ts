@@ -21,6 +21,7 @@ export async function GET() {
         id: Number(payload.sub),
         username: payload.username,
         email: payload.email,
+        role: payload.role ?? 'user',
       },
     })
   } catch {

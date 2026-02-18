@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const trimmedEmail = email.trim().toLowerCase()
     const rows = await query<UserRow[]>(
-      'SELECT id, username, email, password FROM users WHERE email = ? LIMIT 1',
+      'SELECT id, username, email, password, COALESCE(role, "user") as role FROM users WHERE email = ? LIMIT 1',
       [trimmedEmail]
     )
 
@@ -39,12 +39,13 @@ export async function POST(request: Request) {
       sub: String(user.id),
       username: user.username,
       email: user.email,
+      role: user.role ?? 'user',
     })
 
     const { name, options } = getCookieOptions()
     const response = NextResponse.json({
       success: true,
-      user: { id: user.id, username: user.username, email: user.email },
+      user: { id: user.id, username: user.username, email: user.email, role: user.role ?? 'user' },
     })
     response.cookies.set(name, token, options as Record<string, string | number | boolean>)
 
