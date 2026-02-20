@@ -12,6 +12,8 @@ export type GalleryItem = {
   upvotes: number
   downvotes: number
   rating: number
+  savedBytes: number
+  savedCO2Grams: number
 }
 
 type GalleryResponse = { success?: boolean; items?: GalleryItem[] }

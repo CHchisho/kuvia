@@ -10,7 +10,9 @@ import {
   faImage,
   faArrowLeft,
   faRightFromBracket,
+  faLeaf,
 } from '@fortawesome/free-solid-svg-icons';
+import { formatCO2, formatSavedBytes } from '@/lib/environmentMetrics';
 import Button from '@/components/Button/Button';
 import {useIsAllowed} from '@/store/useIsAllowed';
 
@@ -27,6 +29,8 @@ type UploadItem = {
   upvotes: number;
   downvotes: number;
   rating: number;
+  savedBytes: number;
+  savedCO2Grams: number;
 };
 
 type UserStats = {
@@ -35,6 +39,8 @@ type UserStats = {
   totalRating: number;
   imageCount: number;
   topCount: number;
+  totalSavedBytes: number;
+  savedCO2Grams: number;
 };
 
 export default function MePage() {
@@ -74,6 +80,8 @@ export default function MePage() {
             totalRating: statsRes.totalRating,
             imageCount: statsRes.imageCount,
             topCount: statsRes.topCount,
+            totalSavedBytes: statsRes.totalSavedBytes ?? 0,
+            savedCO2Grams: statsRes.savedCO2Grams ?? 0,
           });
         }
       })
@@ -168,6 +176,15 @@ export default function MePage() {
                 {stats?.imageCount ?? '—'}
               </span>
             </div>
+            {(stats?.totalSavedBytes != null && (stats.totalSavedBytes > 0 || stats.savedCO2Grams > 0)) && (
+              <div className="flex items-center gap-2 text-mono-200 sm:col-span-3">
+                <FontAwesomeIcon icon={faLeaf} className="text-primary-100" />
+                <span>Total saved</span>
+                <span className="text-mono-100 font-medium">
+                  {formatSavedBytes(stats.totalSavedBytes)} · {formatCO2(stats.savedCO2Grams)} CO₂
+                </span>
+              </div>
+            )}
           </div>
         </section>
 
@@ -201,6 +218,11 @@ export default function MePage() {
                   <p className="text-xs text-mono-200 mt-0.5">
                     ▲ {item.upvotes} · {item.rating} · ▼ {item.downvotes}
                   </p>
+                  {(item.savedBytes > 0 || item.savedCO2Grams > 0) && (
+                    <p className="text-xs text-mono-300 mt-0.5">
+                      Saved: {formatSavedBytes(item.savedBytes)} · {formatCO2(item.savedCO2Grams)} CO₂
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>

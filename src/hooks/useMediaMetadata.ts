@@ -12,6 +12,8 @@ export type MediaMetadata = {
   createdAt: string
   authorUsername: string
   authorId: number
+  savedBytes: number
+  savedCO2Grams: number
 }
 
 type Response = {

@@ -30,6 +30,8 @@ CREATE TABLE media (
     isPrivate BOOLEAN DEFAULT FALSE,
     expiresAt DATETIME NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    originalSizeBytes BIGINT NULL,
+    storedSizeBytes BIGINT NULL,
     FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_code (code),
     INDEX idx_userId (userId),

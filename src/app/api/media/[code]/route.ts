@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getAuthUser, canViewMedia } from '@/lib/authRequest'
+import {
+  computeSavedBytes,
+  savedBytesToCO2Grams,
+} from '@/lib/environmentMetrics'
 
 type MediaMetaRow = {
   id: number
@@ -12,6 +16,8 @@ type MediaMetaRow = {
   expiresAt: Date
   createdAt: Date
   username: string
+  originalSizeBytes: number | null
+  storedSizeBytes: number | null
 }
 
 /**
@@ -33,7 +39,8 @@ export async function GET(
     }
 
     const rows = await query<MediaMetaRow[]>(
-      `SELECT m.id, m.userId, m.code, m.description, m.isPrivate, m.mimeType, m.expiresAt, m.createdAt, u.username
+      `SELECT m.id, m.userId, m.code, m.description, m.isPrivate, m.mimeType, m.expiresAt, m.createdAt, u.username,
+              m.originalSizeBytes, m.storedSizeBytes
        FROM media m
        INNER JOIN users u ON m.userId = u.id
        WHERE m.code = ? LIMIT 1`,
@@ -64,6 +71,12 @@ export async function GET(
       )
     }
 
+    const savedBytes = computeSavedBytes(
+      row.originalSizeBytes ?? null,
+      row.storedSizeBytes ?? null
+    )
+    const savedCO2Grams = savedBytesToCO2Grams(savedBytes)
+
     return NextResponse.json({
       success: true,
       media: {
@@ -76,6 +89,8 @@ export async function GET(
         createdAt: row.createdAt,
         authorUsername: row.username,
         authorId: row.userId,
+        savedBytes,
+        savedCO2Grams,
       },
     })
   } catch (e) {

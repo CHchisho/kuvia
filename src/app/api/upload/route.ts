@@ -7,6 +7,7 @@ import {
   hashBuffer,
   saveImageAsWebP,
 } from '@/lib/imageStorage'
+import { savedBytesToCO2Grams } from '@/lib/environmentMetrics'
 import { generateShortCode } from '@/lib/shortCode'
 
 const EXPIRY_DAYS_OPTIONS = [1, 7, 14, 30]
@@ -79,26 +80,34 @@ export async function POST(request: Request) {
       [user.id, fileHash]
     )
 
+    const originalSizeBytes = buffer.length
+
     if (existing.length > 0) {
       const row = existing[0]!
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
       const url = baseUrl ? `${baseUrl}/${row.code}` : `/${row.code}`
+      const duplicateSavedBytes = originalSizeBytes
       return NextResponse.json({
         success: true,
         duplicate: true,
         shortCode: row.code,
         url,
         expiresAt: row.expiresAt,
+        savedBytes: duplicateSavedBytes,
+        savedCO2Grams: savedBytesToCO2Grams(duplicateSavedBytes),
       })
     }
 
     const shortCode = await generateShortCode()
-    const { storagePath, mimeType } = await saveImageAsWebP(buffer, shortCode)
+    const { storagePath, mimeType, storedSizeBytes } = await saveImageAsWebP(
+      buffer,
+      shortCode
+    )
     const expiresAt = getExpiresAt(expiresInDays)
 
     await query(
-      `INSERT INTO media (userId, code, image, fileHash, mimeType, description, isPrivate, expiresAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO media (userId, code, image, fileHash, mimeType, description, isPrivate, expiresAt, originalSizeBytes, storedSizeBytes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         user.id,
         shortCode,
@@ -108,17 +117,22 @@ export async function POST(request: Request) {
         description || null,
         isPublic ? 0 : 1,
         expiresAt,
+        originalSizeBytes,
+        storedSizeBytes,
       ]
     )
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
     const url = baseUrl ? `${baseUrl}/${shortCode}` : `/${shortCode}`
+    const savedBytes = Math.max(0, originalSizeBytes - storedSizeBytes)
 
     return NextResponse.json({
       success: true,
       shortCode,
       url,
       expiresAt: expiresAt.toISOString(),
+      savedBytes,
+      savedCO2Grams: savedBytesToCO2Grams(savedBytes),
     })
   } catch (e) {
     console.error('Upload error:', e)

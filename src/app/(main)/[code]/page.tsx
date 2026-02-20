@@ -7,6 +7,7 @@ import {useAuthMe} from '@/hooks/useAuthMe';
 import {useMediaComments} from '@/hooks/useMediaComments';
 import {useMediaVotes, type VoteType} from '@/hooks/useMediaVotes';
 import {useMediaMetadata} from '@/hooks/useMediaMetadata';
+import {formatCO2, formatSavedBytes} from '@/lib/environmentMetrics';
 
 interface PhotoPageProps {
   params: Promise<{code: string}>;
@@ -192,6 +193,14 @@ export default function PhotoPage({params}: PhotoPageProps) {
                 <p>
                   <span className="text-mono-300">Type:</span> {metadata.mimeType}
                 </p>
+                {(metadata.savedBytes > 0 || metadata.savedCO2Grams > 0) && (
+                  <p>
+                    <span className="text-mono-300">Saved:</span>{' '}
+                    <span className="text-mono-100">
+                      {formatSavedBytes(metadata.savedBytes)} data · {formatCO2(metadata.savedCO2Grams)} CO₂
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
           )}
