@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise'
+import mysql from 'mysql2/promise';
 
 const poolConfig = {
   host: process.env.MYSQL_HOST ?? 'localhost',
@@ -9,15 +9,15 @@ const poolConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-}
+};
 
-let pool: mysql.Pool | null = null
+let pool: mysql.Pool | null = null;
 
 function getPool(): mysql.Pool {
   if (!pool) {
-    pool = mysql.createPool(poolConfig)
+    pool = mysql.createPool(poolConfig);
   }
-  return pool
+  return pool;
 }
 
 /** Execute a query to the database. The pool is created on the first request. */
@@ -25,29 +25,31 @@ export async function query<T = mysql.RowDataPacket[]>(
   sql: string,
   params?: unknown[]
 ): Promise<T> {
-  const p = getPool()
-  const [rows] = await p.execute(sql, params)
-  return rows as T
+  const p = getPool();
+  const [rows] = await p.execute(sql, params);
+  return rows as T;
 }
 
 /** Check the connection to the database (for server start or health-check). */
 export async function checkConnection(): Promise<boolean> {
   try {
-    const p = getPool()
-    await p.execute('SELECT 1')
-    return true
+    const p = getPool();
+    await p.execute('SELECT 1');
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
-export type UserRole = 'user' | 'moderator' | 'admin'
+export type UserRole = 'user' | 'moderator' | 'admin';
 
 export type UserRow = {
-  id: number
-  createdAt: Date
-  username: string
-  email: string
-  password: string
-  role: UserRole
-}
+  id: number;
+  createdAt: Date;
+  username: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  balanceCents: number;
+  totalWaterContributionCents: number;
+};

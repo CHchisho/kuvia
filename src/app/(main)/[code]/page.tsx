@@ -31,7 +31,11 @@ export default function PhotoPage({params}: PhotoPageProps) {
   const [deleting, setDeleting] = useState(false);
 
   const {user} = useAuthMe();
-  const {metadata, loading: loadingMeta, error: metaError} = useMediaMetadata(code);
+  const {
+    metadata,
+    loading: loadingMeta,
+    error: metaError,
+  } = useMediaMetadata(code);
   const {
     votes,
     loading: loadingVotes,
@@ -62,9 +66,7 @@ export default function PhotoPage({params}: PhotoPageProps) {
   };
 
   const showDelete =
-    user &&
-    metadata &&
-    canDelete(user.id, user.role, metadata.authorId);
+    user && metadata && canDelete(user.id, user.role, metadata.authorId);
 
   const handleDelete = async () => {
     if (!code || !showDelete || deleting) return;
@@ -107,7 +109,9 @@ export default function PhotoPage({params}: PhotoPageProps) {
           ← Back to Gallery
         </Link>
         <div className="rounded-lg border border-mono-300 bg-mono-400 p-8 text-center">
-          <p className="text-mono-100 font-medium mb-2">Photo not found or expired</p>
+          <p className="text-mono-100 font-medium mb-2">
+            Photo not found or expired
+          </p>
           <Link href="/" className="text-primary-100 hover:underline">
             Back to Home
           </Link>
@@ -165,44 +169,52 @@ export default function PhotoPage({params}: PhotoPageProps) {
           {/* Metadata */}
           {loadingMeta ? (
             <p className="text-mono-300 text-sm mb-4">Loading info…</p>
-          ) : metadata && (
-            <div className="mb-6 p-4 border border-mono-300 rounded-lg bg-mono-400 text-sm text-mono-200">
-              <div className="grid gap-2">
-                <p>
-                  <span className="text-mono-300">Author:</span>{' '}
-                  <span className="text-mono-100">{metadata.authorUsername}</span>
-                </p>
-                <p>
-                  <span className="text-mono-300">Visibility:</span>{' '}
-                  {metadata.isPrivate ? 'Private' : 'Public'}
-                </p>
-                <p>
-                  <span className="text-mono-300">Uploaded:</span>{' '}
-                  {new Date(metadata.createdAt).toLocaleString()}
-                </p>
-                <p>
-                  <span className="text-mono-300">Expires:</span>{' '}
-                  {new Date(metadata.expiresAt).toLocaleString()}
-                </p>
-                {metadata.description && (
+          ) : (
+            metadata && (
+              <div className="mb-6 p-4 border border-mono-300 rounded-lg bg-mono-400 text-sm text-mono-200">
+                <div className="grid gap-2">
                   <p>
-                    <span className="text-mono-300">Description:</span>{' '}
-                    <span className="text-mono-100">{metadata.description}</span>
-                  </p>
-                )}
-                <p>
-                  <span className="text-mono-300">Type:</span> {metadata.mimeType}
-                </p>
-                {(metadata.savedBytes > 0 || metadata.savedCO2Grams > 0) && (
-                  <p>
-                    <span className="text-mono-300">Saved:</span>{' '}
+                    <span className="text-mono-300">Author:</span>{' '}
                     <span className="text-mono-100">
-                      {formatSavedBytes(metadata.savedBytes)} data · {formatCO2(metadata.savedCO2Grams)} CO₂
+                      {metadata.authorUsername}
                     </span>
                   </p>
-                )}
+                  <p>
+                    <span className="text-mono-300">Visibility:</span>{' '}
+                    {metadata.isPrivate ? 'Private' : 'Public'}
+                  </p>
+                  <p>
+                    <span className="text-mono-300">Uploaded:</span>{' '}
+                    {new Date(metadata.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <span className="text-mono-300">Expires:</span>{' '}
+                    {new Date(metadata.expiresAt).toLocaleString()}
+                  </p>
+                  {metadata.description && (
+                    <p>
+                      <span className="text-mono-300">Description:</span>{' '}
+                      <span className="text-mono-100">
+                        {metadata.description}
+                      </span>
+                    </p>
+                  )}
+                  <p>
+                    <span className="text-mono-300">Type:</span>{' '}
+                    {metadata.mimeType}
+                  </p>
+                  {(metadata.savedBytes > 0 || metadata.savedCO2Grams > 0) && (
+                    <p>
+                      <span className="text-mono-300">Saved:</span>{' '}
+                      <span className="text-mono-100">
+                        {formatSavedBytes(metadata.savedBytes)} data ·{' '}
+                        {formatCO2(metadata.savedCO2Grams)} CO₂
+                      </span>
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {/* Rating section */}
@@ -235,9 +247,7 @@ export default function PhotoPage({params}: PhotoPageProps) {
                     } ${submittingVote ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span>▼</span>
-                    <span>
-                      {loadingVotes ? '...' : votes.downvotes}
-                    </span>
+                    <span>{loadingVotes ? '...' : votes.downvotes}</span>
                   </button>
                 </>
               ) : (

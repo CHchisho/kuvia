@@ -1,26 +1,26 @@
-import { NextResponse } from 'next/server'
-import { getAuthUser } from '@/lib/authRequest'
-import { query } from '@/lib/db'
-import { savedBytesToCO2Grams } from '@/lib/environmentMetrics'
+import {NextResponse} from 'next/server';
+import {getAuthUser} from '@/lib/authRequest';
+import {query} from '@/lib/db';
+import {savedBytesToCO2Grams} from '@/lib/environmentMetrics';
 
 type AggRow = {
-  totalUpvotes: number
-  totalDownvotes: number
-  imageCount: number
-  totalSavedBytes: string | number
-}
+  totalUpvotes: number;
+  totalDownvotes: number;
+  imageCount: number;
+  totalSavedBytes: string | number;
+};
 
 export async function GET() {
   try {
-    const user = await getAuthUser()
+    const user = await getAuthUser();
     if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
+        {success: false, error: 'Authentication required'},
+        {status: 401}
+      );
     }
 
-    const [aggRows, topRows] = await Promise.all([
+    const [aggRows, topRows, userRows] = await Promise.all([
       query<AggRow[]>(
         `SELECT
           COUNT(DISTINCT m.id) AS imageCount,
@@ -38,7 +38,7 @@ export async function GET() {
          WHERE m.userId = ? AND m.expiresAt > NOW()`,
         [user.id]
       ),
-      query<{ topCount: number }[]>(
+      query<{topCount: number}[]>(
         `SELECT COUNT(*) AS topCount FROM (
           SELECT m.id
           FROM media m
@@ -49,10 +49,19 @@ export async function GET() {
         ) t`,
         [user.id]
       ),
-    ])
+      query<{balanceCents: number; totalWaterContributionCents: number}[]>(
+        `SELECT balanceCents, totalWaterContributionCents FROM users WHERE id = ?`,
+        [user.id]
+      ),
+    ]);
 
-    const r = aggRows[0]
-    const top = topRows[0]
+    const r = aggRows[0];
+    const top = topRows[0];
+
+    const balanceCents = userRows[0] ? Number(userRows[0].balanceCents) : 0;
+    const totalWaterContributionCents = userRows[0]
+      ? Number(userRows[0].totalWaterContributionCents)
+      : 0;
 
     if (!r) {
       return NextResponse.json({
@@ -64,12 +73,14 @@ export async function GET() {
         topCount: 0,
         totalSavedBytes: 0,
         savedCO2Grams: 0,
-      })
+        balanceCents,
+        totalWaterContributionCents,
+      });
     }
 
-    const totalUpvotes = Number(r.totalUpvotes)
-    const totalDownvotes = Number(r.totalDownvotes)
-    const totalSavedBytes = Number(r.totalSavedBytes)
+    const totalUpvotes = Number(r.totalUpvotes);
+    const totalDownvotes = Number(r.totalDownvotes);
+    const totalSavedBytes = Number(r.totalSavedBytes);
 
     return NextResponse.json({
       success: true,
@@ -80,12 +91,14 @@ export async function GET() {
       topCount: top ? Number(top.topCount) : 0,
       totalSavedBytes,
       savedCO2Grams: savedBytesToCO2Grams(totalSavedBytes),
-    })
+      balanceCents,
+      totalWaterContributionCents,
+    });
   } catch (e) {
-    console.error('User stats error:', e)
+    console.error('User stats error:', e);
     return NextResponse.json(
-      { success: false, error: 'Failed to load stats' },
-      { status: 500 }
-    )
+      {success: false, error: 'Failed to load stats'},
+      {status: 500}
+    );
   }
 }

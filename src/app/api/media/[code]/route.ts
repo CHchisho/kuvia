@@ -1,24 +1,24 @@
-import { NextResponse } from 'next/server'
-import { query } from '@/lib/db'
-import { getAuthUser, canViewMedia } from '@/lib/authRequest'
+import {NextResponse} from 'next/server';
+import {query} from '@/lib/db';
+import {getAuthUser, canViewMedia} from '@/lib/authRequest';
 import {
   computeSavedBytes,
   savedBytesToCO2Grams,
-} from '@/lib/environmentMetrics'
+} from '@/lib/environmentMetrics';
 
 type MediaMetaRow = {
-  id: number
-  userId: number
-  code: string
-  description: string | null
-  isPrivate: number
-  mimeType: string
-  expiresAt: Date
-  createdAt: Date
-  username: string
-  originalSizeBytes: number | null
-  storedSizeBytes: number | null
-}
+  id: number;
+  userId: number;
+  code: string;
+  description: string | null;
+  isPrivate: number;
+  mimeType: string;
+  expiresAt: Date;
+  createdAt: Date;
+  username: string;
+  originalSizeBytes: number | null;
+  storedSizeBytes: number | null;
+};
 
 /**
  * GET /api/media/[code] — metadata for the photo page.
@@ -26,16 +26,16 @@ type MediaMetaRow = {
  */
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ code: string }> }
+  context: {params: Promise<{code: string}>}
 ) {
   try {
-    const { code } = await context.params
-    const codeTrimmed = code?.trim()
+    const {code} = await context.params;
+    const codeTrimmed = code?.trim();
     if (!codeTrimmed) {
       return NextResponse.json(
-        { success: false, error: 'Invalid or missing code' },
-        { status: 400 }
-      )
+        {success: false, error: 'Invalid or missing code'},
+        {status: 400}
+      );
     }
 
     const rows = await query<MediaMetaRow[]>(
@@ -45,37 +45,37 @@ export async function GET(
        INNER JOIN users u ON m.userId = u.id
        WHERE m.code = ? LIMIT 1`,
       [codeTrimmed]
-    )
+    );
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Media not found' },
-        { status: 404 }
-      )
+        {success: false, error: 'Media not found'},
+        {status: 404}
+      );
     }
 
-    const row = rows[0]!
-    const expiresAt = new Date(row.expiresAt)
+    const row = rows[0]!;
+    const expiresAt = new Date(row.expiresAt);
     if (expiresAt <= new Date()) {
       return NextResponse.json(
-        { success: false, error: 'Link has expired' },
-        { status: 410 }
-      )
+        {success: false, error: 'Link has expired'},
+        {status: 410}
+      );
     }
 
-    const user = await getAuthUser()
+    const user = await getAuthUser();
     if (!canViewMedia(user, row.userId, row.isPrivate === 1)) {
       return NextResponse.json(
-        { success: false, error: 'Media not found' },
-        { status: 404 }
-      )
+        {success: false, error: 'Media not found'},
+        {status: 404}
+      );
     }
 
     const savedBytes = computeSavedBytes(
       row.originalSizeBytes ?? null,
       row.storedSizeBytes ?? null
-    )
-    const savedCO2Grams = savedBytesToCO2Grams(savedBytes)
+    );
+    const savedCO2Grams = savedBytesToCO2Grams(savedBytes);
 
     return NextResponse.json({
       success: true,
@@ -92,12 +92,12 @@ export async function GET(
         savedBytes,
         savedCO2Grams,
       },
-    })
+    });
   } catch (e) {
-    console.error('Media metadata error:', e)
+    console.error('Media metadata error:', e);
     return NextResponse.json(
-      { success: false, error: 'Failed to load metadata' },
-      { status: 500 }
-    )
+      {success: false, error: 'Failed to load metadata'},
+      {status: 500}
+    );
   }
 }

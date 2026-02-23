@@ -1,97 +1,101 @@
-'use client'
+'use client';
 
-import { useCallback, useEffect, useState } from 'react'
+import {useCallback, useEffect, useState} from 'react';
 
-export type VoteType = 'upvote' | 'downvote'
+export type VoteType = 'upvote' | 'downvote';
 
 export type VoteData = {
-  upvotes: number
-  downvotes: number
-  rating: number
-  userVote: VoteType | null
-}
+  upvotes: number;
+  downvotes: number;
+  rating: number;
+  userVote: VoteType | null;
+};
 
 type VotesResponse = {
-  success: boolean
-  upvotes?: number
-  downvotes?: number
-  rating?: number
-  userVote?: VoteType | null
-}
+  success: boolean;
+  upvotes?: number;
+  downvotes?: number;
+  rating?: number;
+  userVote?: VoteType | null;
+};
 
 type VoteActionResponse = {
-  success: boolean
-  error?: string
-}
+  success: boolean;
+  error?: string;
+};
 
-const EMPTY: VoteData = { upvotes: 0, downvotes: 0, rating: 0, userVote: null }
+const EMPTY: VoteData = {upvotes: 0, downvotes: 0, rating: 0, userVote: null};
 
 export function useMediaVotes(code: string | null) {
-  const [votes, setVotes] = useState<VoteData>(EMPTY)
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
+  const [votes, setVotes] = useState<VoteData>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!code) {
-      setVotes(EMPTY)
-      setLoading(false)
-      return
+      setVotes(EMPTY);
+      setLoading(false);
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await fetch(`/api/media/${code}/votes`, {
         credentials: 'include',
-      })
-      const data = (await res.json()) as VotesResponse
+      });
+      const data = (await res.json()) as VotesResponse;
       if (data.success) {
         setVotes({
           upvotes: data.upvotes ?? 0,
           downvotes: data.downvotes ?? 0,
           rating: data.rating ?? 0,
           userVote: data.userVote ?? null,
-        })
+        });
       } else {
-        setVotes(EMPTY)
+        setVotes(EMPTY);
       }
     } catch {
-      setVotes(EMPTY)
+      setVotes(EMPTY);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [code])
+  }, [code]);
 
   useEffect(() => {
-    void refresh()
-  }, [refresh])
+    void refresh();
+  }, [refresh]);
 
   const vote = useCallback(
     async (type: VoteType) => {
-      if (!code) return { success: false, error: 'Missing code' } as VoteActionResponse
-      if (submitting) return { success: false, error: 'Already submitting' } as VoteActionResponse
+      if (!code)
+        return {success: false, error: 'Missing code'} as VoteActionResponse;
+      if (submitting)
+        return {
+          success: false,
+          error: 'Already submitting',
+        } as VoteActionResponse;
 
-      setSubmitting(true)
+      setSubmitting(true);
       try {
         const res = await fetch(`/api/media/${code}/vote`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type': 'application/json'},
           credentials: 'include',
-          body: JSON.stringify({ type }),
-        })
-        const data = (await res.json()) as VoteActionResponse
+          body: JSON.stringify({type}),
+        });
+        const data = (await res.json()) as VoteActionResponse;
         if (data.success) {
-          await refresh()
+          await refresh();
         }
-        return data
+        return data;
       } catch {
-        return { success: false, error: 'Request failed' }
+        return {success: false, error: 'Request failed'};
       } finally {
-        setSubmitting(false)
+        setSubmitting(false);
       }
     },
     [code, refresh, submitting]
-  )
+  );
 
-  return { votes, loading, submitting, refresh, vote }
+  return {votes, loading, submitting, refresh, vote};
 }
-

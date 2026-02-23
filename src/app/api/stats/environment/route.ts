@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
-import { query } from '@/lib/db'
-import { savedBytesToCO2Grams } from '@/lib/environmentMetrics'
-import type { RowDataPacket } from 'mysql2'
+import {NextResponse} from 'next/server';
+import {query} from '@/lib/db';
+import {savedBytesToCO2Grams} from '@/lib/environmentMetrics';
+import type {RowDataPacket} from 'mysql2';
 
-type Row = RowDataPacket & { totalSavedBytes: string | number }
+type Row = RowDataPacket & {totalSavedBytes: string | number};
 
 /**
  * GET /api/stats/environment — global saved data and CO₂ (all non-expired media).
@@ -20,21 +20,21 @@ export async function GET() {
       ), 0) AS totalSavedBytes
        FROM media
        WHERE expiresAt > NOW()`
-    )
+    );
 
-    const totalSavedBytes = Number(rows[0]?.totalSavedBytes ?? 0)
-    const savedCO2Grams = savedBytesToCO2Grams(totalSavedBytes)
+    const totalSavedBytes = Number(rows[0]?.totalSavedBytes ?? 0);
+    const savedCO2Grams = savedBytesToCO2Grams(totalSavedBytes);
 
     return NextResponse.json({
       success: true,
       totalSavedBytes,
       savedCO2Grams,
-    })
+    });
   } catch (e) {
-    console.error('Environment stats error:', e)
+    console.error('Environment stats error:', e);
     return NextResponse.json(
-      { success: false, error: 'Failed to load stats' },
-      { status: 500 }
-    )
+      {success: false, error: 'Failed to load stats'},
+      {status: 500}
+    );
   }
 }

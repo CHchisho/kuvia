@@ -17,8 +17,14 @@ const MAX_SIZE_MB = 10;
 export type ImageUploadProps = {
   isPublic?: boolean;
   expiresInDays?: number;
-  onSuccess?: (data: {shortCode: string; url: string}) => void;
+  onSuccess?: (data: {
+    shortCode: string;
+    url: string;
+    waterContributionCents?: number;
+  }) => void;
   onError?: (message: string) => void;
+  /** When upload is blocked due to limit/balance, e.g. to show top-up link */
+  onNeedTopUp?: () => void;
 };
 
 const DESCRIPTION_MAX_LENGTH = 200;
@@ -28,6 +34,7 @@ export const ImageUpload = ({
   expiresInDays = 1,
   onSuccess,
   onError,
+  onNeedTopUp,
 }: ImageUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -113,10 +120,19 @@ export const ImageUpload = ({
         const msg = data?.error || 'Upload error';
         setError(msg);
         onError?.(msg);
+        if (res.status === 402 && data?.code === 'NEED_TOPUP') {
+          onNeedTopUp?.();
+        }
         return;
       }
 
-      onSuccess?.({shortCode: data.shortCode, url: data.url});
+      onSuccess?.({
+        shortCode: data.shortCode,
+        url: data.url,
+        ...(data.waterContributionCents != null && {
+          waterContributionCents: data.waterContributionCents,
+        }),
+      });
       clearPreview();
     } catch {
       const msg = 'Network error';
@@ -227,8 +243,7 @@ export const ImageUpload = ({
               className="text-5xl text-mono-300 mb-4"
             />
             <p className="text-mono-200 mb-2">
-              Click to select a file or paste an image from clipboard
-              (Ctrl+V)
+              Click to select a file or paste an image from clipboard (Ctrl+V)
             </p>
             <p className="text-sm text-mono-300">
               JPG, PNG, GIF, WebP, up to {MAX_SIZE_MB} MB

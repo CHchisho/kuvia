@@ -13,6 +13,8 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('user', 'moderator', 'admin') NOT NULL DEFAULT 'user',
+    balanceCents INT NOT NULL DEFAULT 0,
+    totalWaterContributionCents INT NOT NULL DEFAULT 0,
     INDEX idx_username (username),
     INDEX idx_email (email),
     INDEX idx_role (role)

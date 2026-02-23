@@ -1,5 +1,5 @@
-import type { IconProps } from "./types";
-import type { SVGProps } from "react";
+import type {IconProps} from './types';
+import type {SVGProps} from 'react';
 
 export const IconHeart2 = ({
   size = 14,
@@ -21,7 +21,7 @@ export const IconHeart2 = ({
       <path
         d="M5.56836 1.5V3.49609H8.43164V1.5H11.1357V3.49609H13V6.5H11.1357V8.49609H9.28418V10.5039H7.43164V12.5H6.56836V10.5039H4.71582V8.49609H2.85156V6.5H1V3.49609H2.85156V1.5H5.56836Z"
         fill="none"
-        stroke={stroke || "currentColor"}
+        stroke={stroke || 'currentColor'}
       />
     </svg>
   );

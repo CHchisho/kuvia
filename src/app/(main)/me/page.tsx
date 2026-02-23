@@ -11,8 +11,10 @@ import {
   faArrowLeft,
   faRightFromBracket,
   faLeaf,
+  faWallet,
+  faDroplet,
 } from '@fortawesome/free-solid-svg-icons';
-import { formatCO2, formatSavedBytes } from '@/lib/environmentMetrics';
+import {formatCO2, formatSavedBytes} from '@/lib/environmentMetrics';
 import Button from '@/components/Button/Button';
 import {useIsAllowed} from '@/store/useIsAllowed';
 
@@ -41,6 +43,8 @@ type UserStats = {
   topCount: number;
   totalSavedBytes: number;
   savedCO2Grams: number;
+  balanceCents?: number;
+  totalWaterContributionCents?: number;
 };
 
 export default function MePage() {
@@ -60,31 +64,48 @@ export default function MePage() {
         if (data.success && data.user) {
           setUser(data.user);
           return Promise.all([
-            fetch('/api/images/my', {credentials: 'include'}).then((r) => r.json()),
-            fetch('/api/users/me/stats', {credentials: 'include'}).then((r) => r.json()),
+            fetch('/api/images/my', {credentials: 'include'}).then((r) =>
+              r.json()
+            ),
+            fetch('/api/users/me/stats', {credentials: 'include'}).then((r) =>
+              r.json()
+            ),
           ]);
         }
         router.replace('/login');
         return null;
       })
-      .then((data: [ { success?: boolean; items?: UploadItem[] }, { success?: boolean } & UserStats ] | null | undefined) => {
-        if (cancelled || data == null || data === undefined) return;
-        const [imagesRes, statsRes] = data;
-        if (imagesRes?.success && Array.isArray(imagesRes.items)) {
-          setUploads(imagesRes.items);
+      .then(
+        (
+          data:
+            | [
+                {success?: boolean; items?: UploadItem[]},
+                {success?: boolean} & UserStats,
+              ]
+            | null
+            | undefined
+        ) => {
+          if (cancelled || data == null || data === undefined) return;
+          const [imagesRes, statsRes] = data;
+          if (imagesRes?.success && Array.isArray(imagesRes.items)) {
+            setUploads(imagesRes.items);
+          }
+          if (statsRes?.success && 'totalUpvotes' in statsRes) {
+            setStats({
+              totalUpvotes: statsRes.totalUpvotes,
+              totalDownvotes: statsRes.totalDownvotes,
+              totalRating: statsRes.totalRating,
+              imageCount: statsRes.imageCount,
+              topCount: statsRes.topCount,
+              totalSavedBytes: statsRes.totalSavedBytes ?? 0,
+              savedCO2Grams: statsRes.savedCO2Grams ?? 0,
+              balanceCents: statsRes.balanceCents ?? 0,
+              totalWaterContributionCents:
+                statsRes.totalWaterContributionCents ?? 0,
+            });
+          }
         }
-        if (statsRes?.success && 'totalUpvotes' in statsRes) {
-          setStats({
-            totalUpvotes: statsRes.totalUpvotes,
-            totalDownvotes: statsRes.totalDownvotes,
-            totalRating: statsRes.totalRating,
-            imageCount: statsRes.imageCount,
-            topCount: statsRes.topCount,
-            totalSavedBytes: statsRes.totalSavedBytes ?? 0,
-            savedCO2Grams: statsRes.savedCO2Grams ?? 0,
-          });
-        }
-      })
+      )
       .catch(() => {
         if (!cancelled) router.replace('/login');
       })
@@ -132,7 +153,13 @@ export default function MePage() {
                 <span className="text-mono-200">Email:</span> {user.email}
               </p>
             </div>
-            <div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/me/topup">
+                <Button type="button">
+                  <FontAwesomeIcon icon={faWallet} />
+                  Top up balance
+                </Button>
+              </Link>
               <Button
                 variant="primary"
                 type="button"
@@ -176,15 +203,37 @@ export default function MePage() {
                 {stats?.imageCount ?? '—'}
               </span>
             </div>
-            {(stats?.totalSavedBytes != null && (stats.totalSavedBytes > 0 || stats.savedCO2Grams > 0)) && (
-              <div className="flex items-center gap-2 text-mono-200 sm:col-span-3">
-                <FontAwesomeIcon icon={faLeaf} className="text-primary-100" />
-                <span>Total saved</span>
-                <span className="text-mono-100 font-medium">
-                  {formatSavedBytes(stats.totalSavedBytes)} · {formatCO2(stats.savedCO2Grams)} CO₂
-                </span>
-              </div>
-            )}
+            {stats?.totalSavedBytes != null &&
+              (stats.totalSavedBytes > 0 || stats.savedCO2Grams > 0) && (
+                <div className="flex items-center gap-2 text-mono-200 sm:col-span-3">
+                  <FontAwesomeIcon icon={faLeaf} className="text-primary-100" />
+                  <span>Total saved</span>
+                  <span className="text-mono-100 font-medium">
+                    {formatSavedBytes(stats.totalSavedBytes)} ·{' '}
+                    {formatCO2(stats.savedCO2Grams)} CO₂
+                  </span>
+                </div>
+              )}
+            <div className="flex items-center gap-2 text-mono-200 sm:col-span-3">
+              <FontAwesomeIcon icon={faWallet} className="text-primary-100" />
+              <span>Balance</span>
+              <span className="text-mono-100 font-medium">
+                €{((stats?.balanceCents ?? 0) / 100).toFixed(2)}
+              </span>
+            </div>
+            {stats?.totalWaterContributionCents != null &&
+              stats.totalWaterContributionCents > 0 && (
+                <div className="flex items-center gap-2 text-mono-200 sm:col-span-3">
+                  <FontAwesomeIcon
+                    icon={faDroplet}
+                    className="text-primary-100"
+                  />
+                  <span>Total contributed to water</span>
+                  <span className="text-mono-100 font-medium">
+                    €{(stats.totalWaterContributionCents / 100).toFixed(2)}
+                  </span>
+                </div>
+              )}
           </div>
         </section>
 
@@ -220,7 +269,8 @@ export default function MePage() {
                   </p>
                   {(item.savedBytes > 0 || item.savedCO2Grams > 0) && (
                     <p className="text-xs text-mono-300 mt-0.5">
-                      Saved: {formatSavedBytes(item.savedBytes)} · {formatCO2(item.savedCO2Grams)} CO₂
+                      Saved: {formatSavedBytes(item.savedBytes)} ·{' '}
+                      {formatCO2(item.savedCO2Grams)} CO₂
                     </p>
                   )}
                 </li>

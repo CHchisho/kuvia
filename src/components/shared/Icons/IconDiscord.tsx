@@ -1,9 +1,9 @@
-import type { IconProps } from "./types";
-import type { SVGProps } from "react";
+import type {IconProps} from './types';
+import type {SVGProps} from 'react';
 
 export const IconDiscord = ({
   size = 14,
-  color = "#FFFFFF",
+  color = '#FFFFFF',
   className,
   ...rest
 }: IconProps & SVGProps<SVGSVGElement>) => {

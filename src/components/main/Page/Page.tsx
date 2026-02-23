@@ -3,14 +3,11 @@
 import React, {useState, useEffect} from 'react';
 import Link from 'next/link';
 import {useAuthMe} from '@/hooks/useAuthMe';
-import {
-  useGalleryItems,
-  type SortOption,
-} from '@/hooks/useGalleryItems';
+import {useGalleryItems, type SortOption} from '@/hooks/useGalleryItems';
 import {formatCO2, formatSavedBytes} from '@/lib/environmentMetrics';
 import {IconFan} from '@/components/shared/Icons/IconFan';
 
-type EnvStats = { totalSavedBytes: number; savedCO2Grams: number } | null;
+type EnvStats = {totalSavedBytes: number; savedCO2Grams: number} | null;
 
 export const Page = () => {
   const [sortBy, setSortBy] = useState<SortOption>('date');
@@ -22,11 +19,24 @@ export const Page = () => {
   useEffect(() => {
     fetch('/api/stats/environment', {credentials: 'include'})
       .then((r) => r.json())
-      .then((data: {success?: boolean; totalSavedBytes?: number; savedCO2Grams?: number}) => {
-        if (data.success && typeof data.totalSavedBytes === 'number' && typeof data.savedCO2Grams === 'number') {
-          setEnvStats({totalSavedBytes: data.totalSavedBytes, savedCO2Grams: data.savedCO2Grams});
+      .then(
+        (data: {
+          success?: boolean;
+          totalSavedBytes?: number;
+          savedCO2Grams?: number;
+        }) => {
+          if (
+            data.success &&
+            typeof data.totalSavedBytes === 'number' &&
+            typeof data.savedCO2Grams === 'number'
+          ) {
+            setEnvStats({
+              totalSavedBytes: data.totalSavedBytes,
+              savedCO2Grams: data.savedCO2Grams,
+            });
+          }
         }
-      })
+      )
       .catch(() => {});
   }, []);
 
@@ -54,20 +64,27 @@ export const Page = () => {
 
   return (
     <div className="w-full px-4 py-8">
-      {envStats != null && (envStats.totalSavedBytes > 0 || envStats.savedCO2Grams > 0) && (
-        <div className="mb-6 p-4 rounded-lg border border-mono-300 bg-mono-400 flex items-center gap-4 flex-wrap">
-          <IconFan size={32} color="var(--color-primary-100)" className="shrink-0" />
-          <div>
-            <p className="text-mono-200 text-sm">Total saved</p>
-            <p className="text-mono-100 font-semibold">
-              {formatSavedBytes(envStats.totalSavedBytes)} data · {formatCO2(envStats.savedCO2Grams)} CO₂
-            </p>
-            <p className="text-mono-300 text-xs mt-0.5">
-              Image compression and optimization reduce storage and transfer, lowering environmental impact.
-            </p>
+      {envStats != null &&
+        (envStats.totalSavedBytes > 0 || envStats.savedCO2Grams > 0) && (
+          <div className="mb-6 p-4 rounded-lg border border-mono-300 bg-mono-400 flex items-center gap-4 flex-wrap">
+            <IconFan
+              size={32}
+              color="var(--color-primary-100)"
+              className="shrink-0"
+            />
+            <div>
+              <p className="text-mono-200 text-sm">Total saved</p>
+              <p className="text-mono-100 font-semibold">
+                {formatSavedBytes(envStats.totalSavedBytes)} data ·{' '}
+                {formatCO2(envStats.savedCO2Grams)} CO₂
+              </p>
+              <p className="text-mono-300 text-xs mt-0.5">
+                Image compression and optimization reduce storage and transfer,
+                lowering environmental impact.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-mono-100">Gallery</h1>
         <div className="flex items-center gap-2">
@@ -92,7 +109,10 @@ export const Page = () => {
           style={{columnGap: '1rem'}}
         >
           {items.map((image) => (
-            <div key={image.id} className="block w-full mb-4 break-inside-avoid">
+            <div
+              key={image.id}
+              className="block w-full mb-4 break-inside-avoid"
+            >
               <div className="relative w-full overflow-hidden rounded-lg bg-mono-400">
                 <Link
                   href={`/${image.code}`}
@@ -100,12 +120,12 @@ export const Page = () => {
                   aria-label={`Open photo ${image.code}`}
                 >
                   <div className="relative w-full aspect-square">
-                  <img
-                    src={image.imageUrl}
-                    alt={image.description || 'Photo'}
-                    className="object-cover w-full h-full"
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 20vw"
-                  />
+                    <img
+                      src={image.imageUrl}
+                      alt={image.description || 'Photo'}
+                      className="object-cover w-full h-full"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 20vw"
+                    />
                   </div>
                 </Link>
                 <div className="p-3 bg-mono-400">
@@ -155,7 +175,8 @@ export const Page = () => {
                   )}
                   {(image.savedBytes > 0 || image.savedCO2Grams > 0) && (
                     <p className="text-xs text-mono-300 mt-1">
-                      Saved: {formatSavedBytes(image.savedBytes)} · {formatCO2(image.savedCO2Grams)} CO₂
+                      Saved: {formatSavedBytes(image.savedBytes)} ·{' '}
+                      {formatCO2(image.savedCO2Grams)} CO₂
                     </p>
                   )}
                 </div>
