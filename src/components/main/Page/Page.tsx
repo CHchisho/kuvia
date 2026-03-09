@@ -8,10 +8,14 @@ import {formatCO2, formatSavedBytes} from '@/lib/environmentMetrics';
 import {IconFan} from '@/components/shared/Icons/IconFan';
 
 type EnvStats = {totalSavedBytes: number; savedCO2Grams: number} | null;
+type VoteActionResponse = {
+  success?: boolean;
+  action?: 'created' | 'updated' | 'removed';
+};
 
 export const Page = () => {
   const [sortBy, setSortBy] = useState<SortOption>('date');
-  const {items, loading, refresh} = useGalleryItems(sortBy);
+  const {items, loading, applyVoteUpdate} = useGalleryItems(sortBy);
   const {user} = useAuthMe();
   const [submittingCode, setSubmittingCode] = useState<string | null>(null);
   const [envStats, setEnvStats] = useState<EnvStats>(null);
@@ -53,9 +57,9 @@ export const Page = () => {
         body: JSON.stringify({type}),
       });
 
-      const data = (await res.json()) as {success?: boolean};
-      if (data.success) {
-        await refresh();
+      const data = (await res.json()) as VoteActionResponse;
+      if (data.success && data.action) {
+        applyVoteUpdate(code, type, data.action);
       }
     } finally {
       setSubmittingCode(null);

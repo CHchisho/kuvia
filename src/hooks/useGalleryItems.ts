@@ -16,6 +16,9 @@ export type GalleryItem = {
   savedCO2Grams: number;
 };
 
+type VoteType = 'upvote' | 'downvote';
+type VoteAction = 'created' | 'updated' | 'removed';
+
 type GalleryResponse = {success?: boolean; items?: GalleryItem[]};
 
 export function useGalleryItems(sortBy: SortOption) {
@@ -52,5 +55,52 @@ export function useGalleryItems(sortBy: SortOption) {
     };
   }, [refresh]);
 
-  return {items, loading, refresh};
+  const applyVoteUpdate = useCallback(
+    (code: string, requestedType: VoteType, action: VoteAction) => {
+      setItems((currentItems) => {
+        let hasUpdatedItem = false;
+
+        const nextItems = currentItems.map((item) => {
+          if (item.code !== code) return item;
+
+          hasUpdatedItem = true;
+
+          let upvotes = item.upvotes;
+          let downvotes = item.downvotes;
+
+          if (action === 'created') {
+            if (requestedType === 'upvote') upvotes += 1;
+            else downvotes += 1;
+          } else if (action === 'updated') {
+            if (requestedType === 'upvote') {
+              upvotes += 1;
+              downvotes = Math.max(0, downvotes - 1);
+            } else {
+              downvotes += 1;
+              upvotes = Math.max(0, upvotes - 1);
+            }
+          } else if (requestedType === 'upvote') {
+            upvotes = Math.max(0, upvotes - 1);
+          } else {
+            downvotes = Math.max(0, downvotes - 1);
+          }
+
+          return {
+            ...item,
+            upvotes,
+            downvotes,
+            rating: upvotes - downvotes,
+          };
+        });
+
+        if (!hasUpdatedItem) return currentItems;
+        if (sortBy !== 'rating') return nextItems;
+
+        return [...nextItems].sort((a, b) => b.rating - a.rating);
+      });
+    },
+    [sortBy]
+  );
+
+  return {items, loading, refresh, applyVoteUpdate};
 }
