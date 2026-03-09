@@ -105,15 +105,15 @@ export const Page = () => {
         <p className="text-mono-200">No public photos yet.</p>
       ) : (
         <div
-          className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4"
-          style={{columnGap: '1rem'}}
+          className="grid gap-4 mx-auto"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 18rem), 1fr))',
+            maxWidth: 'calc(5 * 18rem + 4 * 1rem)',
+          }}
         >
           {items.map((image) => (
-            <div
-              key={image.id}
-              className="block w-full mb-4 break-inside-avoid"
-            >
-              <div className="relative w-full overflow-hidden rounded-lg bg-mono-400">
+            <div key={image.id} className="block w-full">
+              <div className="relative w-full overflow-hidden rounded-lg bg-mono-400 h-full">
                 <Link
                   href={`/${image.code}`}
                   className="block cursor-pointer hover:opacity-80 transition-opacity"
@@ -124,7 +124,7 @@ export const Page = () => {
                       src={image.imageUrl}
                       alt={image.description || 'Photo'}
                       className="object-cover w-full h-full"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 20vw"
+                      sizes="(max-width: 320px) 100vw, (max-width: 624px) 100vw, (max-width: 928px) 50vw, (max-width: 1232px) 33vw, (max-width: 1536px) 25vw, 18rem"
                     />
                   </div>
                 </Link>
