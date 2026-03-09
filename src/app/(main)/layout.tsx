@@ -13,8 +13,11 @@ import {headers} from 'next/headers';
 import {QueryProvider} from '@/components/QueryProvider';
 import {GeistMono, DharmaGothicE} from '../../styles/fonts';
 import Footer from '@/components/shared/Footer';
+import {initializeServer} from '@/lib/serverBootstrap';
 
 const Layout = async ({children}: {children: React.ReactNode}) => {
+  await initializeServer();
+
   return (
     <html lang="en">
       <head></head>
