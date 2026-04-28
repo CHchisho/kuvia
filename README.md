@@ -34,6 +34,8 @@ Main tables:
 
 In addition, the schema contains `tags`, `media_tags`, and `views` tables that support future extensibility of the data model.
 
+![kuvia-users.png](kuvia-users.png)
+
 ## Implemented Features
 
 - user registration, login, and logout
